@@ -20,14 +20,51 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Класс Info предоставляет методы для работы с API Spotify через сервис dubolt.com,
+ * обеспечивает парсинг JSON-ответов и формирование объектов Track для рекомендаций.
+ * <p>
+ * Синглтон экземпляр доступен через {@link #info}.
+ * <p>
+ * Основные методы:
+ * <ul>
+ *     <li>{@link #getSeedFromRequest(String)} — извлечение seed ID из JSON-ответа поискового запроса.</li>
+ *     <li>{@link #getSearchedItems(String)} — получение массива JSON-объектов треков из JSON-строки.</li>
+ *     <li>{@link #getRawSimilarTracks(String, Params)} — запрос рекомендаций по seed с указанными параметрами {@link Params}.</li>
+ *     <li>{@link #getRawSimilarTracks(String)} — парсинг JSON-строки с треками в массив объектов {@link Track}.</li>
+ * </ul>
+ * <p>
+ * Вспомогательные методы служат для удобного парсинга JSON-объектов и массивов, а также для извлечения информации об альбомных изображениях.
+ *
+ * @author Ebanina Std.
+ * @version 1.0
+ * @since 1.0
+ */
 public class Info {
+    /**
+     * Ключ для поиска ID в JSON объектах.
+     */
+
     public static final String ID_TYPE = "id";
+    /**
+     * Синглтон-экземпляр класса для удобного вызова из других частей программы.
+     */
 
     public static Info info = new Info();
+    /**
+     * Публичный конструктор.
+     */
 
     public Info() {
     }
 
+    /**
+     * Извлекает ID seed из JSON-ответа поискового запроса.
+     *
+     * @param req JSON строка с ответом на поисковый запрос.
+     * @return ID seed в виде строки.
+     * @throws RuntimeException при ошибках парсинга JSON.
+     */
     public String getSeedFromRequest(String req) {
         try {
             JSONArray itemSearched = getSearchedItems(req);
@@ -39,6 +76,14 @@ public class Info {
             throw new RuntimeException(e);
         }
     }
+
+    /**
+     * Извлекает массив найденных JSON треков из строки с полным ответом поискового запроса.
+     *
+     * @param req JSON строка с ответом.
+     * @return Массив JSON объектов tracks.
+     * @throws RuntimeException при ошибках парсинга JSON.
+     */
     public org.json.simple.JSONArray getSearchedItems(String req) {
         try {
             Object tracksParser = new JSONParser().parse(req);
@@ -55,6 +100,15 @@ public class Info {
         }
     }
 
+    /**
+     * Выполняет запрос рекомендаций Spotify по заданному seed и параметрам.
+     *
+     * @param seed  Seed ID трека.
+     * @param param Параметры рекомендаций {@link Params}.
+     * @return Массив объектов Track с рекомендованными треками.
+     * @throws IOException    ошибка при сетевом запросе.
+     * @throws ParseException ошибка парсинга JSON.
+     */
     public Track[] getRawSimilarTracks(String seed, Params param) throws IOException, ParseException {
         String req = Net.netty.sendGETRequest((
                 "https://dubolt.com/api/recommendations?" + URLEncoder.encode(
@@ -81,6 +135,13 @@ public class Info {
         return getRawSimilarTracks(req);
     }
 
+    /**
+     * Парсит JSON строку с треками в массив объектов Track.
+     *
+     * @param req JSON строка с треками.
+     * @return Массив Track.
+     * @throws ParseException ошибка парсинга JSON.
+     */
     public Track[] getRawSimilarTracks(String req) throws ParseException {
         StringBuilder artist = new StringBuilder();
 
@@ -124,6 +185,13 @@ public class Info {
         return res;
     }
 
+    /**
+     * Извлекает список объектов Art (альбомные изображения) из JSON.
+     *
+     * @param nameObject JSONObject с информацией об альбоме.
+     * @return Список Art.
+     * @throws ParseException ошибка парсинга JSON.
+     */
     private List<Art> getAlbumUrlsFromRawJson(JSONObject nameObject) throws ParseException {
         List<Art> arts = new ArrayList<>();
 
@@ -139,21 +207,51 @@ public class Info {
         return arts;
     }
 
+    /**
+     * Парсит строку JSON в JSONArray.
+     *
+     * @param in JSON строка.
+     * @return JSONArray.
+     * @throws ParseException ошибка парсинга.
+     */
     private JSONArray getArray(String in) throws ParseException {
         Object albumParser = new JSONParser().parse(in);
         return (JSONArray) albumParser;
     }
 
+    /**
+     * Парсит строку JSON в JSONObject.
+     *
+     * @param in JSON строка.
+     * @return JSONObject.
+     * @throws ParseException ошибка парсинга.
+     */
     private JSONObject getObject(String in) throws ParseException {
         Object albumParser = new JSONParser().parse(in);
         return  (JSONObject) albumParser;
     }
 
+    /**
+     * Парсит и возвращает значение по ключу из JSONObject в виде строки.
+     *
+     * @param in  JSON строка.
+     * @param key ключ для поиска.
+     * @return значение в виде строки.
+     * @throws ParseException ошибка парсинга.
+     */
     private String parseObject(String in, String key) throws ParseException {
         JSONObject albumObject = getObject(in);
         return albumObject.get(key).toString();
     }
 
+    /**
+     * Парсит JSONArray и возвращает элемент по индексу в виде строки.
+     *
+     * @param in  JSON строка с массивом.
+     * @param key индекс элемента.
+     * @return значение в виде строки.
+     * @throws ParseException ошибка парсинга.
+     */
     private String parseArray(String in, int key) throws ParseException {
         JSONArray albumObject = getArray(in);
         return albumObject.get(key).toString();
