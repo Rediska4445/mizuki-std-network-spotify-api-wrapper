@@ -2,8 +2,10 @@ package me.API.Album;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * Класс Track представляет аудиотрек с метаданными,
@@ -125,6 +127,17 @@ public class Track implements Serializable, Comparable<Track> {
      */
     public List<Art> getAlbumArt() {
         return albumArt;
+    }
+
+    /**
+     * Возвращает самую большую обложку альбома
+     * @return обложка альбома {@link Art}.
+     */
+    public Art getAwesomeAlbumArt() {
+        Optional<Art> maxHeightArt = albumArt.stream()
+                .max(Comparator.comparingInt(Art::getHeight));
+
+        return maxHeightArt.orElse(null);
     }
 
     /**

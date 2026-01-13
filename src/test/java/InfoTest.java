@@ -28,7 +28,7 @@ public class InfoTest {
     }
 
     @Test
-    public void testGetSeedFromRequest() {
+    public void testGetSeedFromRequest() throws ParseException {
         String json = "{ \"tracks\": { \"items\": [ { \"id\": \"12345\" } ] } }";
 
         String seed = info.getSeedFromRequest(json);
