@@ -2,8 +2,7 @@ package me.API.Album;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Класс Track представляет аудиотрек с метаданными,
@@ -30,7 +29,9 @@ import java.util.Objects;
  * @version 1.2
  * @since 1.2
  */
-public class Track implements Serializable, Comparable<Track> {
+public class Track
+        implements Serializable, Comparable<Track>
+{
     @Serial
     private static final long serialVersionUID = 3_7_4L;
 
@@ -42,10 +43,48 @@ public class Track implements Serializable, Comparable<Track> {
     private int duration;
     private boolean isExplicit;
 
+    private String dateUpload;
+    private String externalUrls;
+
+    private String href;
+
     /**
      * Пустой конструктор.
      */
     public Track() {}
+
+    private Map<String, String> info = new HashMap<>();
+
+    public Map<String, String> getInfo() {
+        return info;
+    }
+
+    public String getHref() {
+        return href;
+    }
+
+    public Track setHref(String href) {
+        this.href = href;
+        return this;
+    }
+
+    public String getExternalUrls() {
+        return externalUrls;
+    }
+
+    public Track setExternalUrls(String externalUrls) {
+        this.externalUrls = externalUrls;
+        return this;
+    }
+
+    public String getDateUpload() {
+        return dateUpload;
+    }
+
+    public Track setDateUpload(String dateUpload) {
+        this.dateUpload = dateUpload;
+        return this;
+    }
 
     /**
      * Возвращает признак явного контента.
@@ -125,6 +164,17 @@ public class Track implements Serializable, Comparable<Track> {
      */
     public List<Art> getAlbumArt() {
         return albumArt;
+    }
+
+    /**
+     * Возвращает самую большую обложку альбома
+     * @return обложка альбома {@link Art}.
+     */
+    public Art getAwesomeAlbumArt() {
+        Optional<Art> maxHeightArt = albumArt.stream()
+                .max(Comparator.comparingInt(Art::getHeight));
+
+        return maxHeightArt.orElse(null);
     }
 
     /**
