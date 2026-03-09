@@ -6,32 +6,32 @@
 
 ---
 
-## Описание
+## Description
 
-Это внутренний модуль проекта Ebanina, который используется для получения информации с сервиса Spotify.
-
----
-
-# Архитектура проекта
-
-Основным классом является __Info__, который содержит в себе основую функцию для получения похожих треков.
+This is an internal module of the Ebanina project, designed to retrieve information from the Spotify service.
 
 ---
 
-## Начало работы
+# Project Architecture
 
-Чтобы использовать модуль, достаточно подключить его в _class-path_.
-Модуль уже содержит в себе зависимости. 
-Для тестирования работаспособности, можно открыть __Jar__ файл как обычное приложение.
+The core class is **Info**, which provides the primary functionality for fetching similar tracks.
 
 ---
 
-## Функциональность
+## Getting Started
 
-- Получение информации о треке
-- Получение похожих треков
-- Парсинг обложки трека
+To use the module, simply add it to your **classpath**.
+The module already includes all necessary dependencies.
+To test its functionality, you can run the **JAR** file as a standalone application.
 
 ---
 
-*Использование модуля как что-то действительно рабочее, не подразумевается.*
+## Features
+
+- Retrieve track metadata
+- Fetch similar tracks
+- Parse track cover art
+
+---
+
+*Note: This module is not intended for production use.*
