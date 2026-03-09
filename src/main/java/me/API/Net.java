@@ -1,8 +1,10 @@
 package me.API;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
@@ -87,25 +89,24 @@ public class Net {
     /**
      * Выполняет HTTP GET-запрос по заданному URL и возвращает ответ как строку.
      *
-     * @param url строка URL для запроса
+     * @param urlString строка URL для запроса
      * @return тело ответа сервера в виде строки
      * @throws IOException ошибка ввода-вывода при выполнении запроса
      */
-    public String sendGETRequest(String url) throws IOException {
-        HttpURLConnection connection = openConnection(url);
-        connection.setRequestMethod("GET");
-        connection.setUseCaches(false);
+    public String sendGETRequest(String urlString) throws IOException {
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .build();
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-        String inputLine;
-        StringBuilder response = new StringBuilder();
+        Request request = new Request.Builder()
+                .url(urlString)
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+                .header("Accept", "application/json")
+                .build();
 
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
+        try (Response response = client.newCall(request).execute()) {
+            return response.body().string();
         }
-
-        in.close();
-
-        return response.toString();
     }
 }

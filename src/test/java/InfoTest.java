@@ -23,12 +23,11 @@ public class InfoTest {
         netMock = mock(Net.class);
         info = new Info();
 
-        // В вашем коде Net.netty статичен, можно подменить через рефлексию или делать Info более тестируемым:
         Net.netty = netMock;
     }
 
     @Test
-    public void testGetSeedFromRequest() {
+    public void testGetSeedFromRequest() throws ParseException {
         String json = "{ \"tracks\": { \"items\": [ { \"id\": \"12345\" } ] } }";
 
         String seed = info.getSeedFromRequest(json);

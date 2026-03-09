@@ -44,17 +44,15 @@ public class Info {
     /**
      * Ключ для поиска ID в JSON объектах.
      */
-
     public static final String ID_TYPE = "id";
     /**
      * Синглтон-экземпляр класса для удобного вызова из других частей программы.
      */
-
     public static Info info = new Info();
+
     /**
      * Публичный конструктор.
      */
-
     public Info() {
     }
 
@@ -65,16 +63,8 @@ public class Info {
      * @return ID seed в виде строки.
      * @throws RuntimeException при ошибках парсинга JSON.
      */
-    public String getSeedFromRequest(String req) {
-        try {
-            JSONArray itemSearched = getSearchedItems(req);
-
-            Object idParser = new JSONParser().parse(itemSearched.get(0).toString());
-            JSONObject idObject = (JSONObject) idParser;
-            return idObject.get(ID_TYPE).toString();
-        } catch (ParseException e) {
-            throw new RuntimeException(e);
-        }
+    public String getSeedFromRequest(String req) throws ParseException {
+        return parseObject(getSearchedItems(req).get(0).toString(), ID_TYPE);
     }
 
     /**
@@ -87,13 +77,13 @@ public class Info {
     public org.json.simple.JSONArray getSearchedItems(String req) {
         try {
             Object tracksParser = new JSONParser().parse(req);
-
             JSONObject tracksObject = (JSONObject) tracksParser;
             String tracksSearched = tracksObject.get("tracks").toString();
 
             Object itemsParser = new JSONParser().parse(tracksSearched);
             JSONObject itemsObject = (JSONObject) itemsParser;
             String itemsStringsSearched = itemsObject.get("items").toString();
+
             return (org.json.simple.JSONArray) new JSONParser().parse(itemsStringsSearched);
         } catch (ParseException e) {
             throw new RuntimeException(e);
@@ -143,8 +133,6 @@ public class Info {
      * @throws ParseException ошибка парсинга JSON.
      */
     public Track[] getRawSimilarTracks(String req) throws ParseException {
-        StringBuilder artist = new StringBuilder();
-
         Track[] res;
 
         String tracks = parseObject(req, "tracks");
@@ -154,36 +142,79 @@ public class Info {
         res = new Track[itemSearched.size()];
 
         for (int i = 0; i < itemSearched.size(); i++) {
-            org.json.simple.JSONArray ArtistsArr = getArray(parseObject(itemSearched.get(i).toString(), "artists"));
-
-            JSONObject nameObject = getObject(itemSearched.get(i).toString());
-
-            if (ArtistsArr.size() > 1) {
-                for (Object o : ArtistsArr) {
-                    artist.append(parseObject(o.toString(), "name")).append(",").append(" ");
-                }
-
-                artist.delete(artist.length() - 2, artist.length());
-            } else {
-                artist = new StringBuilder(getObject(ArtistsArr.get(0).toString()).get("name").toString());
-            }
-
-            Track track = new Track()
-                    .setId(nameObject.get("name").toString())
-                    .setTitle(nameObject.get("name").toString())
-                    .setPopularity(Integer.parseInt(nameObject.get("popularity").toString()))
-                    .setDuration(Integer.parseInt(nameObject.get("duration_ms").toString()))
-                    .setExplicit(Boolean.parseBoolean(nameObject.get("explicit").toString()))
-                    .setAuthor(artist.toString())
-                    .setAlbumArt(getAlbumUrlsFromRawJson(nameObject));
-
-            res[i] = track;
-
-            artist.setLength(0);
+            res[i] = parseTrack(itemSearched.get(i).toString());
         }
 
         return res;
     }
+
+    public Track[] getSimilarTracks(String viewName, int limit) throws ParseException, IOException {
+        String searchResponse = Net.netty.sendGETForFindRequest(viewName);
+        String seed = Info.info.getSeedFromRequest(searchResponse);
+
+        return getRawSimilarTracks(seed, new Params(limit));
+    }
+
+    private Track parseTrack(String in) throws ParseException {
+        StringBuilder artist = new StringBuilder();
+
+        org.json.simple.JSONArray ArtistsArr = getArray(parseObject(in.toString(), "artists"));
+
+        JSONObject nameObject = getObject(in.toString());
+
+        if (ArtistsArr.size() > 1) {
+            for (Object o : ArtistsArr) {
+                artist.append(parseObject(o.toString(), "name")).append(",").append(" ");
+            }
+
+            artist.delete(artist.length() - 2, artist.length());
+        } else {
+            artist = new StringBuilder(getObject(ArtistsArr.get(0).toString()).get("name").toString());
+        }
+
+        Track track = new Track()
+                .setAuthor(artist.toString())
+                .setId(nameObject.get("name").toString())
+                .setTitle(nameObject.get("name").toString())
+                .setPopularity(Integer.parseInt(nameObject.get("popularity").toString()))
+                .setDuration(Integer.parseInt(nameObject.get("duration_ms").toString()))
+                .setExplicit(Boolean.parseBoolean(nameObject.get("explicit").toString()))
+                .setAlbumArt(getAlbumUrlsFromRawJson(nameObject))
+                .setExternalUrls(parseObject(nameObject.get("external_urls").toString(), "spotify"))
+                .setHref(nameObject.get("href").toString())
+                .setDateUpload(parseObject(nameObject.get("album").toString(), "release_date"));
+
+        return track;
+    }
+
+   public Track search(String query) throws IOException, ParseException {
+       String track = getSearchedItems(Net.netty.sendGETForFindRequest(query)).get(0).toString();
+
+       JSONObject nameObject = getObject(track);
+
+       StringBuilder artist = new StringBuilder();
+
+       org.json.simple.JSONArray ArtistsArr = getArray(parseObject(track, "artists"));
+
+       if (ArtistsArr.size() > 1) {
+           for (Object o : ArtistsArr) {
+               artist.append(parseObject(o.toString(), "name")).append(",").append(" ");
+           }
+
+           artist.delete(artist.length() - 2, artist.length());
+       } else {
+           artist = new StringBuilder(getObject(ArtistsArr.get(0).toString()).get("name").toString());
+       }
+
+       return new Track()
+               .setId(nameObject.get("name").toString())
+               .setTitle(nameObject.get("name").toString())
+               .setPopularity(Integer.parseInt(nameObject.get("popularity").toString()))
+               .setDuration(Integer.parseInt(nameObject.get("duration_ms").toString()))
+               .setExplicit(Boolean.parseBoolean(nameObject.get("explicit").toString()))
+               .setAuthor(artist.toString())
+               .setAlbumArt(getAlbumUrlsFromRawJson(nameObject));
+   }
 
     /**
      * Извлекает список объектов Art (альбомные изображения) из JSON.
