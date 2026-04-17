@@ -162,7 +162,7 @@ public class Track
      * Возвращает список изображений альбома.
      * @return список объектов {@link Art}.
      */
-    public List<Art> getAlbumArt() {
+    public List<Art> getAlbumArts() {
         return albumArt;
     }
 
@@ -173,6 +173,13 @@ public class Track
     public Art getAwesomeAlbumArt() {
         Optional<Art> maxHeightArt = albumArt.stream()
                 .max(Comparator.comparingInt(Art::getHeight));
+
+        return maxHeightArt.orElse(null);
+    }
+
+    public Art getMipMap() {
+        Optional<Art> maxHeightArt = albumArt.stream()
+                .min(Comparator.comparingInt(Art::getHeight));
 
         return maxHeightArt.orElse(null);
     }
