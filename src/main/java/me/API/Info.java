@@ -21,7 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Класс Info предоставляет методы для работы с API Spotify через сервис dubolt.com,
+ * Класс Net предоставляет методы для работы с API Spotify через сервис dubolt.com,
  * обеспечивает парсинг JSON-ответов и формирование объектов Track для рекомендаций.
  * <p>
  * Синглтон экземпляр доступен через {@link #info}.
@@ -50,10 +50,17 @@ public class Info {
      */
     public static Info info = new Info();
 
+    private final Net net;
+
     /**
      * Публичный конструктор.
      */
+    public Info(Net net) {
+        this.net = net;
+    }
+
     public Info() {
+        this.net = Net.netty;
     }
 
     /**
@@ -100,7 +107,7 @@ public class Info {
      * @throws ParseException ошибка парсинга JSON.
      */
     public Track[] getRawSimilarTracks(String seed, Params param) throws IOException, ParseException {
-        String req = Net.netty.sendGETRequest((
+        String req = net.sendGETRequest((
                 "https://dubolt.com/api/recommendations?" + URLEncoder.encode(
                         "limit=" + param.limit +
                                 "&min_popularity=" + param.min_popularity +
@@ -149,7 +156,7 @@ public class Info {
     }
 
     public Track[] getSimilarTracks(String viewName, int limit) throws ParseException, IOException {
-        String searchResponse = Net.netty.sendGETForFindRequest(viewName);
+        String searchResponse = net.sendGETForFindRequest(viewName);
         String seed = Info.info.getSeedFromRequest(searchResponse);
 
         return getRawSimilarTracks(seed, new Params(limit));
@@ -188,7 +195,7 @@ public class Info {
     }
 
    public Track search(String query) throws IOException, ParseException {
-       String track = getSearchedItems(Net.netty.sendGETForFindRequest(query)).get(0).toString();
+       String track = getSearchedItems(net.sendGETForFindRequest(query)).get(0).toString();
 
        JSONObject nameObject = getObject(track);
 

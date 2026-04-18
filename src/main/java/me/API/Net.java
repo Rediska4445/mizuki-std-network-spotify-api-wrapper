@@ -1,8 +1,8 @@
 package me.API;
 
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
+import rf.ebanina.utils.network.Response;
+import rf.ebanina.utils.network.okhttp.OkHttpClient;
+import rf.ebanina.utils.network.okhttp.OkHttpRequest;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -94,19 +94,16 @@ public class Net {
      * @throws IOException ошибка ввода-вывода при выполнении запроса
      */
     public String sendGETRequest(String urlString) throws IOException {
-        OkHttpClient client = new OkHttpClient.Builder()
-                .connectTimeout(10, java.util.concurrent.TimeUnit.SECONDS)
-                .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-                .build();
+        OkHttpClient wrappedClient = new OkHttpClient(OkHttpClient.buildDefault().okHttpClient());
+        OkHttpRequest request = new OkHttpRequest(new URL(urlString), wrappedClient);
 
-        Request request = new Request.Builder()
-                .url(urlString)
-                .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
-                .header("Accept", "application/json")
-                .build();
+        try {
+            Response response = request.send();
+            return (response != null && response.getBody() != null) ? response.getBody().toString() : "";
+        } catch (java.io.InterruptedIOException e) {
+            request.abort();
 
-        try (Response response = client.newCall(request).execute()) {
-            return response.body().string();
+            throw e;
         }
     }
 }

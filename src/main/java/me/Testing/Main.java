@@ -12,6 +12,25 @@ import java.io.IOException;
 import java.util.Arrays;
 
 public class Main {
+    private static final String[] tracksList = new String[] {
+            "dvrst sleeprepeat",
+            "dvrst close eyes",
+            "dvrst falling stars",
+            "dvrst until the stars collide",
+
+            "kute avoid me",
+            "kute anubis",
+            "kute krush girl",
+            "kute raven",
+            "kute dead on arrival",
+
+            "moondeity neon blade",
+            "moondeity wake up",
+            "moondeity one chance",
+            "moondeity butterfly",
+            "moondeity ghost"
+    };
+
     public static void main(String[] args) throws IOException, ParseException {
         SwingUtilities.invokeLater(() -> {
             JFrame frame = new JFrame("Spotify API Main");
@@ -25,10 +44,28 @@ public class Main {
             resultsArea.setEditable(false);
             JScrollPane scrollPane = new JScrollPane(resultsArea);
 
-            JPanel topPanel = new JPanel(new BorderLayout(5, 0));
-            topPanel.add(new JLabel("Enter track or artist:"), BorderLayout.WEST);
-            topPanel.add(inputField, BorderLayout.CENTER);
-            topPanel.add(searchButton, BorderLayout.EAST);
+            // выпадающий список с треками
+            JComboBox<String> trackComboBox = new JComboBox<>(tracksList);
+            trackComboBox.addActionListener(e -> {
+                String selected = (String) trackComboBox.getSelectedItem();
+                if (selected != null) {
+                    inputField.setText(selected); // подставляем в поле ввода
+                }
+            });
+
+            // верхняя панель: лейбл, поле, комбобокс, кнопка
+            JPanel topPanel = new JPanel(new GridLayout(2, 1, 5, 5));
+            JPanel upperRow = new JPanel(new BorderLayout(5, 0));
+            upperRow.add(new JLabel("Enter track or artist:"), BorderLayout.WEST);
+            upperRow.add(inputField, BorderLayout.CENTER);
+
+            JPanel lowerRow = new JPanel(new BorderLayout(5, 0));
+            lowerRow.add(new JLabel("Quick tracks:"), BorderLayout.WEST);
+            lowerRow.add(trackComboBox, BorderLayout.CENTER);
+            lowerRow.add(searchButton, BorderLayout.EAST);
+
+            topPanel.add(upperRow);
+            topPanel.add(lowerRow);
 
             panel.add(topPanel, BorderLayout.NORTH);
             panel.add(scrollPane, BorderLayout.CENTER);
@@ -45,9 +82,7 @@ public class Main {
 
                 new Thread(() -> {
                     try {
-                        String searchResponse = Net.netty.sendGETForFindRequest(query);
-                        String seed = Info.info.getSeedFromRequest(searchResponse);
-                        Track[] tracks = Info.info.getRawSimilarTracks(seed, new Params(25));
+                        Track[] tracks = Info.info.getSimilarTracks(query, 25);
 
                         StringBuilder sb = new StringBuilder();
                         Arrays.stream(tracks).forEach(track -> sb.append("Title: ").append(track.getTitle())
